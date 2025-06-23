@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mini E-Commerce</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #121212; /* Thicker background */
+      color: #e0e0e0;
+      padding: 1rem;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #1f1f1f;
+      color: white;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+    }
+    #filters {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    #filters input, #filters select {
+      padding: 0.7rem;
+      font-size: 1rem;
+      border: 1px solid #555;
+      border-radius: 8px;
+      width: 48%;
+      background: #1e1e1e;
+      color: white;
+    }
+    #product-list {
+      display: grid;
+      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+    .product {
+      background: #222;
+      padding: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .product:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+    }
+    .product img {
+      width: 100%;
+      height: auto;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    .product h3 {
+      margin: 0.5rem 0;
+    }
+    .product p {
+      color: #03dac6;
+      font-weight: bold;
+    }
+    .product button {
+      margin-top: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: #03a9f4;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .product button:hover {
+      background: #0288d1;
+    }
+    #cart {
+      background: #ff6b6b;
+      padding: 0.5rem 1rem;
+      border-radius: 30px;
+      font-weight: bold;
+    }
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+      color: #aaa;
+      font-size: 0.9rem;
+    }
+    section#about, section#quiz {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: #1d1d1d;
+      border-radius: 10px;
+    }
+    section#quiz button {
+      margin: 0.5rem;
+      background: #8e44ad;
+    }
+    .correct { background-color: #388e3c !important; }
+    .wrong { background-color: #c62828 !important; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🛍 Trendy Cart</h1>
+    <div id="cart">
+      🛒 Cart <span id="cart-count">0</span>
+    </div>
+  </header>
+
+  <!-- About Section -->
+  <section id="about">
+    <h2>👤 About Me</h2>
+    <p>Hi! I'm a passionate front-end developer who loves crafting beautiful, responsive, and interactive websites. I enjoy turning ideas into digital experiences using HTML, CSS, JavaScript, and React.</p>
+  </section>
+
+  <!-- Filters -->
+  <section id="filters">
+    <input type="text" id="search" placeholder="🔎 Search products..." />
+    <select id="sort">
+      <option value="default">Sort By</option>
+      <option value="low-high">Price: Low to High</option>
+      <option value="high-low">Price: High to Low</option>
+    </select>
+  </section>
+
+  <!-- Product List -->
+  <main id="product-list">
+    <!-- Products injected by JS -->
+  </main>
+
+  <!-- Quiz Section -->
+  <section id="quiz">
+    <h2>🧠 Quick Quiz</h2>
+    <p id="quiz-question">Loading...</p>
+    <button onclick="choose('a')">A</button>
+    <button onclick="choose('b')">B</button>
+    <p id="quiz-feedback"></p>
+    <p id="quiz-score"></p>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 Trendy Cart. All rights reserved.</p>
+  </footer>
+
+  <script>
+    const productList = document.getElementById("product-list");
+    const searchInput = document.getElementById("search");
+    const sortSelect = document.getElementById("sort");
+    const cartCount = document.getElementById("cart-count");
+
+    let cart = [];
+
+    const products = [
+      {
+        id: 101,
+        name: "Wireless Headphones",
+        price: 59.99,
+        image: "https://m.media-amazon.com/images/I/61VjbZzVnuL.jpg"
+      },
+      {
+        id: 102,
+        name: "Leather Wallet",
+        price: 29.99,
+        image: "https://m.media-amazon.com/images/I/81cZ7MN1Y1L._AC_UY350_.jpg"
+      },
+      {
+        id: 103,
+        name: "Yoga Mat",
+        price: 19.99,
+        image: "https://m.media-amazon.com/images/I/81kpFaIpMUL._AC_UF894,1000_QL80_.jpg"
+      },
+      {
+        id: 104,
+        name: "Bluetooth Speaker",
+        price: 45.00,
+        image: "https://m.media-amazon.com/images/I/71UvIbhTwGL._AC_UY327_FMwebp_QL65_.jpg"
+      }
+    ];
+
+    function displayProducts(items) {
+      productList.innerHTML = "";
+      items.forEach(p => {
+        const card = document.createElement("div");
+        card.className = "product";
+        card.innerHTML = `
+          <img src="${p.image}" alt="${p.name}" loading="lazy" />
+          <h3>${p.name}</h3>
+          <p>$${p.price}</p>
+          <button onclick="addToCart(${p.id})">Add to Cart</button>
+        `;
+        productList.appendChild(card);
+      });
+    }
+
+    function addToCart(id) {
+      const product = products.find(p => p.id === id);
+      cart.push(product);
+      cartCount.textContent = cart.length;
+      alert(`${product.name} added to cart!`);
+    }
+
+    searchInput.addEventListener("input", () => {
+      const keyword = searchInput.value.toLowerCase();
+      const filtered = products.filter(p =>
+        p.name.toLowerCase().includes(keyword)
+      );
+      displayProducts(filtered);
+    });
+
+    sortSelect.addEventListener("change", () => {
+      let sorted = [...products];
+      if (sortSelect.value === "low-high") {
+        sorted.sort((a, b) => a.price - b.price);
+      } else if (sortSelect.value === "high-low") {
+        sorted.sort((a, b) => b.price - a.price);
+      }
+      displayProducts(sorted);
+    });
+
+    // Quiz Logic
+    const quizQuestions = [
+      {
+        question: "What does HTML stand for?",
+        a: "HyperText Markup Language",
+        b: "Hyperlink and Text Markup Language",
+        correct: "a"
+      },
+      {
+        question: "Which is a JavaScript framework?",
+        a: "Laravel",
+        b: "React",
+        correct: "b"
+      },
+      {
+        question: "What does CSS control?",
+        a: "Website Structure",
+        b: "Website Appearance",
+        correct: "b"
+      }
+    ];
+
+    let currentQ = 0;
+    let score = 0;
+
+    function loadQuiz() {
+      const q = quizQuestions[currentQ];
+      document.getElementById("quiz-question").textContent = q.question;
+      const btns = document.querySelectorAll("#quiz button");
+      btns[0].textContent = "A: " + q.a;
+      btns[1].textContent = "B: " + q.b;
+      btns.forEach(btn => btn.classList.remove("correct", "wrong"));
+      document.getElementById("quiz-feedback").textContent = "";
+    }
+
+    function choose(answer) {
+      const correct = quizQuestions[currentQ].correct;
+      const btns = document.querySelectorAll("#quiz button");
+
+      if (answer === correct) {
+        document.getElementById("quiz-feedback").textContent = "✅ Correct!";
+        btns[answer === 'a' ? 0 : 1].classList.add("correct");
+        score++;
+      } else {
+        document.getElementById("quiz-feedback").textContent = "❌ Wrong!";
+        btns[answer === 'a' ? 0 : 1].classList.add("wrong");
+      }
+
+      document.getElementById("quiz-score").textContent = `Score: ${score}/${quizQuestions.length}`;
+      currentQ = (currentQ + 1) % quizQuestions.length;
+
+      setTimeout(loadQuiz, 1500);
+    }
+
+    // Initialize
+    displayProducts(products);
+    loadQuiz();
+  </script>
+</body>
+</html>
